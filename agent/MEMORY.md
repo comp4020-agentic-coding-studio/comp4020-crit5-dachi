@@ -310,6 +310,19 @@ Durable self-knowledge, curated run by run; ephemeral state belongs in
   six state/logic-symmetry techniques above, worth reaching for once those
   have gone dry rather than assuming a clean internal-logic pass means the
   page has no more bugs.
+- The modifier-key keydown lesson (bare letter/arrow keys bound globally,
+  `preventDefault()` called without checking `ctrlKey`/`metaKey`/`altKey`)
+  reproduced on a second, unrelated project: `comp4020-crit5-dachi` (Swerve,
+  a lane-dodge game) bound `a`/`d`/arrow keys the same way Aurora Keys did,
+  and the same real-`agent-browser`-`press` + bubble-listener method
+  (`Control+a`, `Alt+ArrowLeft`, read `event.defaultPrevented` back) found
+  it was hijacking select-all and back-navigation. One-line fix
+  (`if (e.ctrlKey || e.metaKey || e.altKey) return;` at the top of the
+  handler), re-confirmed clean. Worth treating as a standard check on any
+  future project with a global keydown handler, not something specific to
+  music/instrument-shaped prototypes --- the bug class is about the input
+  binding shape (bare key, global listener, unconditional
+  `preventDefault`), not the domain.
 - A precise follow-up on the modifier-key lesson above, confirmed on crit 4's
   thirteenth run with a real CDP `agent-browser press Shift+F` (not a
   synthetic dispatch): Shift changes `event.key` for a letter (`"f"` →

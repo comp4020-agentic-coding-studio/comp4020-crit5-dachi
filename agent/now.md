@@ -1,53 +1,53 @@
-# Hand-off --- crit 5 (a game), second run, 155.5h to cutoff
+# Hand-off --- crit 5 (a game), third run, 144.5h to cutoff
 
 ## State
 
 `comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Working tree clean,
-pushed nowhere yet (local only, as expected this early --- still well inside
-the plan/build/deepen window).
+pushed --- `origin/main` is at `0634784`.
 
-1. Confirmed `pnpm check` green (24/24 tests) before and after this run's one
-   change.
-2. Did the depth pass the first hand-off flagged as open: played several real
-   timed rounds via a temporary `window.__debug` probe in `main.ts` (removed
-   with `git checkout` before committing --- see MEMORY.md's existing
-   technique note, now also written into this project's own `CLAUDE.md`) with
-   `agent-browser` driving real key presses. Findings:
-   - The difficulty ramp (blocked-lane count climbs to score 40, speed climbs
-     to score 75 then plateaus) reads as genuinely graduated, not a cliff ---
-     confirms the brief's "a skill that sharpens" bar without needing a
-     second interacting mechanic.
-   - Restart-on-any-key feels cheap in the encouraging sense: the board
-     clears fully and the next threat is still ~4s out, so dying doesn't
-     punish immediately retrying.
-   - One scripted death around score 23 was very likely CLI round-trip
-     latency outrunning the reaction window at higher speed (a known
-     tooling artefact per MEMORY.md), not a fairness bug --- the
-     never-blocks-every-lane invariant is already unit-tested.
-   - **Decision, made deliberately rather than left implicit**: kept the
-     single mechanic. The brief says one mechanic is usually enough, and the
-     real playtest supports that this one already sustains interest for
-     five minutes on its own via the ramp. Not adding a second mechanic
-     (e.g. a shield pickup) this run; revisit only if a future playtest
-     pass suggests the ramp alone stops being enough, not on a schedule.
-3. Wrote the fixed-logical-resolution letterboxed-canvas pattern and the
-   debug-probe playtesting technique into this repo's own `CLAUDE.md`
-   (`7bd5b67`) --- the working-style memory's "grow the project's own
-   CLAUDE.md once a sensor lens lands or a pattern gets reused" condition was
-   now met (this run's playtest was a second, distinct sensor lens beyond the
-   first run's a11y/keyboard/resize sweep).
-4. Did **not** touch `PROCESS.md` or `reflections/crit-5.md` yet --- still
-   two runs in, nowhere near sensor-exhaustion or clock-pressure signals.
+1. Ran the browser sensor sweep the second hand-off flagged as open: a11y
+   (`agent-browser a11y`, 0 violations/0 incomplete), screenshots at both
+   marking viewports (390×844, 1920×1080 --- both letterbox cleanly, no
+   overflow), tab order (body → nav link → canvas), keyboard movement, and
+   a mid-round resize (canvas rescaled, game-over overlay stayed centred,
+   `best` survived). No console errors across the session. All clean ---
+   no new finding from this pass alone.
+2. Did the logic/state-symmetry pass over `resetGame` the second hand-off
+   also flagged: `best` is confirmed the only deliberate exception to a
+   full reset; the one asymmetry found (`spawnAccumulator` starts at
+   `-START_GRACE_PX` on first load but `0` on `resetGame`) is *not* a bug
+   --- it matches the already-measured "~4s runway" after a death recorded
+   in this repo's own `CLAUDE.md`, i.e. the longer grace is deliberately a
+   first-time-player-only affordance.
+3. Found and fixed a real bug via a technique carried over from crit 4
+   (Aurora Keys), not from this project's own history: the global keydown
+   handler bound `a`/`d`/arrow keys and called `preventDefault()`
+   unconditionally, hijacking `Ctrl+A` (select-all) and `Alt+ArrowLeft`
+   (browser back). Confirmed with real `agent-browser press` + a
+   bubble-phase listener reading `event.defaultPrevented`, fixed with a
+   one-line modifier guard, re-confirmed clean
+   ([`eb9883e`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/eb9883e)).
+   Recorded in both this repo's `CLAUDE.md`
+   ([`0634784`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/0634784))
+   and the global `MEMORY.md` (confirms the lesson generalises past
+   music/instrument prototypes to any global-keydown game).
+4. Still did **not** touch `PROCESS.md`'s template or write
+   `reflections/crit-5.md` --- three runs in, sensors have found one real
+   bug this run (not yet dry), and 144.5h is nowhere near clock-pressure.
+   `eb9883e` is a strong PROCESS.md citation candidate for later
+   (real bug found by real browser input, not code review).
 
 ## Next action
 
-Sensors not yet run on this project: a full a11y/keyboard/resize/screenshot
-re-sweep (last confirmed clean on the first run, before the grace-period
-change and card replacement --- worth one more pass since those two commits
-touched timing and a public asset, even though neither touches the DOM
-structure the sweep checks) and a logic/state-symmetry pass over
-`game-logic.ts`/`main.ts` (e.g. does `resetGame` clear every piece of mutable
-state the render function reads --- `best` is deliberately kept across
-resets, confirm that's the only deliberate exception). Consider whether
-Swerve's own `CLAUDE.md` should also record the "one mechanic, decided not
-two" call as a citable moment for `PROCESS.md` later.
+Sensor lenses not yet run on this project: a full logic-symmetry pass
+specifically over `game-logic.ts`'s `generateRow` (existing tests already
+cover "never blocks every lane" across difficulties, but not whether the
+*distribution* of blocked-lane counts at difficulty 1 actually reaches the
+documented max, i.e. is `maxBlocked` ever the value that gets used, or does
+`Math.floor(random() * maxBlocked)` bias it low), and a touch-input check
+mirroring the mouse/keyboard ones already done (pointerdown lane-half split
+at `relX < 0.5` --- confirm it works identically for a touch pointer, not
+just the synthetic mouse-shaped `pointerdown` already exercised). The
+"one mechanic vs two" call from the second hand-off is still worth
+recording as a PROCESS.md citation candidate whenever that file gets
+written, alongside this run's modifier-key fix.
