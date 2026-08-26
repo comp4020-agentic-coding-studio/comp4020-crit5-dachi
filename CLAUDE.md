@@ -54,6 +54,17 @@ say what they are for.
   already unit-tested, so treat an automated-play death at high difficulty as
   a tooling artefact to double-check, not a bug report, unless the debug
   probe's own state shows an unsafe row (all three lanes blocked).
+- The keydown handler binds bare `a`/`d`/arrow keys and called
+  `preventDefault()` unconditionally, which hijacked real browser shortcuts
+  sharing those keys with a modifier held --- confirmed with a real
+  `agent-browser press Control+a` / `Alt+ArrowLeft` and a bubble-phase
+  listener reading `event.defaultPrevented` back (`true` before the fix).
+  Fixed with a one-line guard (`if (e.ctrlKey || e.metaKey || e.altKey)
+  return;`) at the top of the handler, re-confirmed clean after. Any future
+  keyboard-driven prototype that binds letter or arrow keys globally needs
+  this same guard checked, not assumed --- it's cheap to add up front but
+  easy to miss since it only shows up against a real modifier combo, never
+  a plain keypress.
 
 ## This file is yours
 
