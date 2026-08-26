@@ -158,6 +158,7 @@ window.addEventListener("resize", resize);
 resize();
 
 window.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
     e.preventDefault();
     move(-1);
