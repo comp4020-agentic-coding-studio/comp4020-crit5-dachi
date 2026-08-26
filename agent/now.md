@@ -1,61 +1,53 @@
-# Hand-off --- crit 5 (a game), first run, 161.5h to cutoff
+# Hand-off --- crit 5 (a game), second run, 155.5h to cutoff
 
 ## State
 
-`comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Fresh starter repo at
-the start of this run; now a playable v1, three commits ahead of the initial
-commit, pushed nowhere yet (local only, as expected this early).
+`comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Working tree clean,
+pushed nowhere yet (local only, as expected this early --- still well inside
+the plan/build/deepen window).
 
-1. Read the brief (`crits/05-game.json`): no on-screen tutorial, losable, an
-   ending, obvious in ten seconds, still interesting at five minutes, a
-   focused automated test on one rule, one change from playing not reading,
-   both marking viewports.
-2. Built the mechanic: player token fixed near the bottom of three lanes;
-   rows fall from the top, each row blocks 1--2 lanes but never all of them
-   (fairness invariant); arrow keys / A-D / tap-left-tap-right move a lane;
-   score increments per row survived; speed and blocked-lane count ramp with
-   score; any input after game-over restarts (same affordance, no separate
-   "press to restart" instruction). Pure rules live in `game-logic.ts`,
-   isolated from the canvas/DOM in `main.ts` specifically so the round-ending
-   rule (`isCollision`) could get the brief's required focused unit test ---
-   `spec/game-logic.test.ts` also covers the "never blocks every lane"
-   fairness invariant and the speed/difficulty ramps. 24/24 tests green,
-   `pnpm check` green throughout.
-3. Fixed-logical-resolution canvas (300×500 world units) scaled via
-   `canvas.style.width/height` to fit the viewport, letterboxed --- confirmed
-   correct at both marking viewports (390×844, 1920×1080), at 320px (no
-   reflow overflow), and across a resize mid-interaction (lane position
-   survived 390×844 → 1920×1080). `agent-browser a11y` came back 0
-   violations/0 incomplete; a real `Tab` walkthrough reaches the nav link
-   then the canvas (a real `aria-label`, not visible instruction text) and
-   focus-visible outline shows.
-4. **The one change that came from playing, not reading the code**
-   (`48b88a8`): actually running the built game in `agent-browser` (a
-   temporary `window.__debug` probe exposing `playerLane`/`score`/`rows`,
-   removed before committing --- see the new MEMORY.md technique note) showed
-   the very first row could reach the player only ~3s after page load. Fine
-   for someone who's played once already; tight for a first-ever look who's
-   still orienting. Held the spawn timer back so the opening run gets about
-   another second of runway before anything is actually at stake, closer to
-   World 1-1's flat ground before its first enemy.
-5. Replaced the template's placeholder `public/card.png` with a real one:
-   the lane panel screenshotted live, composited next to a "SWERVE" wordmark
-   (`462182a`).
-6. Did **not** touch `PROCESS.md`, `reflections/crit-5.md`, or this repo's
-   own `CLAUDE.md` yet --- 161.5h out, one build-and-verify pass in, nowhere
-   near the sensor-exhaustion or clock-pressure signals that make writing
-   those early the right call (see MEMORY.md's "Working style" section).
+1. Confirmed `pnpm check` green (24/24 tests) before and after this run's one
+   change.
+2. Did the depth pass the first hand-off flagged as open: played several real
+   timed rounds via a temporary `window.__debug` probe in `main.ts` (removed
+   with `git checkout` before committing --- see MEMORY.md's existing
+   technique note, now also written into this project's own `CLAUDE.md`) with
+   `agent-browser` driving real key presses. Findings:
+   - The difficulty ramp (blocked-lane count climbs to score 40, speed climbs
+     to score 75 then plateaus) reads as genuinely graduated, not a cliff ---
+     confirms the brief's "a skill that sharpens" bar without needing a
+     second interacting mechanic.
+   - Restart-on-any-key feels cheap in the encouraging sense: the board
+     clears fully and the next threat is still ~4s out, so dying doesn't
+     punish immediately retrying.
+   - One scripted death around score 23 was very likely CLI round-trip
+     latency outrunning the reaction window at higher speed (a known
+     tooling artefact per MEMORY.md), not a fairness bug --- the
+     never-blocks-every-lane invariant is already unit-tested.
+   - **Decision, made deliberately rather than left implicit**: kept the
+     single mechanic. The brief says one mechanic is usually enough, and the
+     real playtest supports that this one already sustains interest for
+     five minutes on its own via the ramp. Not adding a second mechanic
+     (e.g. a shield pickup) this run; revisit only if a future playtest
+     pass suggests the ramp alone stops being enough, not on a schedule.
+3. Wrote the fixed-logical-resolution letterboxed-canvas pattern and the
+   debug-probe playtesting technique into this repo's own `CLAUDE.md`
+   (`7bd5b67`) --- the working-style memory's "grow the project's own
+   CLAUDE.md once a sensor lens lands or a pattern gets reused" condition was
+   now met (this run's playtest was a second, distinct sensor lens beyond the
+   first run's a11y/keyboard/resize sweep).
+4. Did **not** touch `PROCESS.md` or `reflections/crit-5.md` yet --- still
+   two runs in, nowhere near sensor-exhaustion or clock-pressure signals.
 
 ## Next action
 
-Depth pass: the mechanic works and is fair by construction, but the brief
-wants "still interesting at five minutes" and "a skill that sharpens or a
-choice that matters" --- worth actually playing several full rounds (real
-timing, not scripted probing) to feel out whether the speed/difficulty ramp
-over `score` 0--40 is paced well, whether restarting immediately (no cooldown)
-makes retrying feel cheap in a good way or a bad way, and whether the
-single-mechanic loop stays interesting or needs a second interacting
-mechanic per the brief's "harder, better move." Also still open: this
-repo's own `CLAUDE.md` hasn't been grown yet with anything project-specific
-(the fixed-logical-resolution letterboxed-canvas pattern is a decent
-candidate once it's been reused, or once a second sensor lens lands).
+Sensors not yet run on this project: a full a11y/keyboard/resize/screenshot
+re-sweep (last confirmed clean on the first run, before the grace-period
+change and card replacement --- worth one more pass since those two commits
+touched timing and a public asset, even though neither touches the DOM
+structure the sweep checks) and a logic/state-symmetry pass over
+`game-logic.ts`/`main.ts` (e.g. does `resetGame` clear every piece of mutable
+state the render function reads --- `best` is deliberately kept across
+resets, confirm that's the only deliberate exception). Consider whether
+Swerve's own `CLAUDE.md` should also record the "one mechanic, decided not
+two" call as a citable moment for `PROCESS.md` later.
