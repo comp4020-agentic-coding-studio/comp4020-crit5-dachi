@@ -1,16 +1,64 @@
+:root {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   font-family: system-ui, sans-serif;
-  line-height: 1.6;
-  color: #1a1a1a;
+  color: #e8e8f0;
+  background: #05060d;
+}
+
+header {
+  padding: 0.75rem 1rem;
+}
+
+nav a {
+  color: #9fb4ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+nav a:hover,
+nav a:focus-visible {
+  text-decoration: underline;
 }
 
 main {
-  max-width: 40rem;
-  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
 }
 
-a {
-  color: #0b5fff;
+h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #9fb4ff;
+}
+
+canvas {
+  touch-action: none;
+  border-radius: 0.5rem;
+  outline-offset: 4px;
+  background: #0b1021;
+}
+
+canvas:focus-visible {
+  outline: 3px solid #9fb4ff;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
