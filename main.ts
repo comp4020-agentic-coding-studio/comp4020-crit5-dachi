@@ -16,6 +16,11 @@ const ROW_H = 56;
 const PLAYER_Y = WORLD_H - 70;
 const ROW_SPACING_PX = 170;
 const SPEED_SCALE = 50;
+// Playtesting (not reading the code) turned this up: on a fresh load the
+// first row could already reach the player only ~3s in, tight for a
+// stranger who's still orienting on their very first look. This holds the
+// spawn timer back so the opening run gets a beat longer before it matters.
+const START_GRACE_PX = 120;
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
 const ctx = canvas.getContext("2d")!;
@@ -31,7 +36,7 @@ let playerX = laneCenter(playerLane);
 let score = 0;
 let best = 0;
 let rows: { row: Row; y: number; scored: boolean }[] = [];
-let spawnAccumulator = 0;
+let spawnAccumulator = -START_GRACE_PX;
 let lastTime = 0;
 let gameOver = false;
 
