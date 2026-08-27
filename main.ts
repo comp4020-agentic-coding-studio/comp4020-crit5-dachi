@@ -176,6 +176,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 canvas.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
   if (gameOver) {
     resetGame();
     return;
