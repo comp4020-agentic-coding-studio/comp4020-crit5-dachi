@@ -82,6 +82,32 @@ say what they are for.
   branch a key can take, including the ones where the game itself does
   nothing, and check it at a viewport where the page's own layout invariant
   (here, "canvas always fits the window") is actually forced to break.
+- The canvas's `pointerdown` handler moved or restarted the player for any
+  mouse button, since it never checked `e.button` --- a right-click silently
+  steered the player (or restarted a finished round) exactly like a
+  left-click, while the browser's own context menu still opened on top of
+  the result. The mouse-button analogue of the modifier-key keydown lesson
+  above: any pointer handler bound to a whole interactive element (not just
+  a keyboard handler bound to a whole keyboard region) needs to check which
+  input variant actually triggered it before treating them as equivalent.
+  Confirmed two ways: a real CDP `agent-browser mouse down/up right` on the
+  canvas (proving the OS/browser genuinely dispatches `pointerdown` with
+  `button: 2`, not just a hand-built event) and a synthetic
+  `dispatchEvent(new PointerEvent('pointerdown', {button: 2, ...}))` via
+  `agent-browser eval` to sidestep this sandbox's CLI round-trip latency
+  outrunning the ~5s-from-load reaction window (see the debug-probe entry
+  above) --- reading `#live`'s text back showed a right-click left a
+  game-over announcement untouched (no `resetGame()`) while an immediately
+  following left-click still blanked it (restart still works), and
+  pixel-read the player's lane to confirm a live-round right-click doesn't
+  move it either. Fixed with `if (e.button !== 0) return;` at the top of
+  the handler --- safe for touch/pen too, since the Pointer Events spec
+  mandates `button === 0` for any primary-contact pointerdown regardless of
+  device. General lesson: this is a distinct check from the touch-action
+  and multi-touch-tracking passes already run on this project --- test the
+  *button* field on a pointerdown handler specifically whenever the handler
+  drives game state from a whole-element listener, not just whether touch
+  and mouse are both wired up.
 
 ## This file is yours
 
