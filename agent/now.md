@@ -1,65 +1,64 @@
-# Hand-off --- crit 5 (a game), fourth run, 137.5h to cutoff
+# Hand-off --- crit 5 (a game), fifth run, 131.5h to cutoff
 
 ## State
 
 `comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Working tree clean,
-pushed --- `origin/main` is at `1201ea6`.
+nothing to commit this run --- `origin/main` still at `87ad335`.
 
-1. Ran both sensor lenses the third hand-off flagged as open, both confirmed
-   clean (no bug):
-   - `generateRow`'s blocked-lane count at high difficulty: empirically
-     verified (200k-sample `node -e`) `Math.floor(random() * maxBlocked)` is
-     unbiased --- both 1 and 2 blocked lanes are reachable at maxBlocked=2,
-     near-even split. Also mapped exactly where the step happens: `maxBlocked`
-     jumps from 1 to 2 at score 20 (difficulty 0.5), not at score 40
-     (difficulty 1) as the code comment's phrasing might suggest --- not a
-     bug, just a looser doc claim than the actual step function, not worth
-     changing.
-   - Touch-input parity: dispatched a real synthetic `PointerEvent` with
-     `pointerType: 'touch'` at the canvas via `agent-browser eval`, both
-     halves. Lane changed correctly (1→0 left, 1→2 right) --- the handler
-     already treats all pointer types uniformly via `clientX`, no bug. One
-     early attempt showed no movement on the very first dispatch of the
-     session; three immediate retries with identical code all worked, so
-     treated as the already-documented "first browser action in a session
-     can be unreliable, reload/retry before trusting a null result" caution,
-     not a real flake to chase further.
-2. Two clean confirms in a row was the cue (per this project's own working-
-   style precedent) to ask a different kind of question rather than re-run
-   the same lenses. Found and fixed a real bug: the keydown handler only
-   called `preventDefault()` on Space/Enter when `gameOver`, so Space during
-   live play fell through to the browser's default scroll. Invisible at both
-   marking viewports (page never overflows there) but real at a forced-
-   overflow viewport (390×250, where `resize()`'s own 0.5 minimum scale
-   floor leaves the canvas taller than the window) --- confirmed
-   `window.scrollY` went from `0` to `98` on a real `agent-browser press
-   Space` before the fix, `0` after. Fixed by calling `preventDefault()`
-   unconditionally for Space/Enter and gating only `resetGame()` on
-   `gameOver`
-   ([`dc29385`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/dc29385)).
-   Recorded in this repo's `CLAUDE.md`
-   ([`1201ea6`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/1201ea6)).
-   This is a distinct bug class from the modifier-key one two runs ago (that
-   was "guard the wrong modifier combo"; this is "forgot to preventDefault
-   on a branch where the game does nothing at all") --- both are candidate
-   `PROCESS.md` citations for later, alongside the "one mechanic vs two"
-   design call already flagged.
-3. Still did **not** touch `PROCESS.md`'s template or write
-   `reflections/crit-5.md` --- four runs in, real bugs are still surfacing
-   (two so far, this run's and the modifier-key one), and 137.5h is nowhere
-   near clock-pressure (~18% of the 168h window elapsed).
+This run repeated the full browser sensor sweep for the first time since run
+2 (three runs of code-level lenses in between), plus one new angle borrowed
+from Aurora Keys' precedent. Everything came back clean --- no new bug:
+
+1. **a11y** (`agent-browser a11y --json`): 0 violations, 0 incomplete.
+2. **Keyboard**: `Tab` walks link → canvas → end of page; canvas is properly
+   in the tab order and window-level keydown handles movement regardless of
+   focus.
+3. **Resize mid-interaction**: moved a lane, resized 1920×1080 → 390×844,
+   state survived; screenshot at 390×844 shows correct layout (player
+   centred, no overflow).
+4. **320px reflow**: `scrollWidth === innerWidth` (320) both at rest and
+   after a keypress.
+5. **Touch-action scoping** (new check, not previously run on this project):
+   Aurora Keys' lesson was that `touch-action: none` on a broad ancestor
+   (`body`) kills pinch-zoom everywhere; Swerve already scopes it to `canvas`
+   only (`styles.css:47`), not `body`. Confirmed by reading the stylesheet
+   --- already correct, nothing to fix.
+6. **Reduced-motion** (new check, not previously run on this project):
+   monkeypatched `ctx.arc` via `agent-browser eval` to record every radius
+   drawn. With `prefers-reduced-motion: reduce` forced, all draws are a flat
+   `20` (pulse genuinely disabled, not just visually subtle). Without it, 69
+   distinct radii across ~1s (a real continuous tween, not a discrete
+   toggle) --- the same "does it actually animate or just flip" question
+   that caught a real bug on Aurora Keys, here confirming Swerve's `main.ts`
+   canvas-draw approach doesn't have that failure mode (it was always a risk
+   specific to animated CSS custom properties without `@property`
+   registration, which doesn't apply to a raw canvas draw call).
 
 ## Next action
 
-The "does preventDefault cover every branch, not just the right modifiers"
-question just paid off once on Space/Enter --- worth a quick sweep of
-whether any *other* key this game responds to could have the same gap (none
-obviously do: Arrow/`a`/`d` already preventDefault unconditionally). Beyond
-that, sensor lenses not yet run on this project: a full a11y/keyboard/resize
-re-sweep hasn't been repeated since run 2 (three runs of code-level lenses
-since); and the "one mechanic vs two" brief provocation (a second interacting
-mechanic, e.g. a pickup/powerup lane or a speed-boost risk/reward choice) is
-still an open, in-scope deepening option if code-level bug-hunting goes dry
-again --- not yet attempted since it's a design/build decision, not a sensor
-check, and the current one-mechanic game already meets the brief's "obvious
-in ten seconds" bar per the pod-test framing.
+Five runs in, code-level lenses (modifier keys, Space-scroll, touch-input
+parity, blocked-lane bias) and now the full browser sweep have all gone
+clean or already been fixed. Two real bugs found and fixed so far (modifier
+keydown hijack, Space-scroll during play) --- both good `PROCESS.md`
+candidates for later, not yet written up (still early: 131.5h is ~22% into
+the 168h window elapsed, not clock-pressure).
+
+The "one mechanic vs two" brief provocation (a second interacting
+mechanic --- e.g. a risk/reward speed-boost or pickup lane) is still open
+and still deferred: three consecutive hand-offs have judged the one-mechanic
+game already meets the brief's "obvious in ten seconds" bar, and a second
+mechanic is explicitly optional ("harder but stronger *if playability
+holds*") --- risky to bolt on without a way to verify "feel," which per this
+project's own working-style precedent (crit 4) needs a human pod, not a
+sensor. Don't add it speculatively; only take it up if a future pod-style
+signal specifically asks for more depth, or if code-level bug-hunting stays
+dry for several more runs and it becomes the only remaining deepening lever.
+
+Sensor families not yet tried on this project, if the next run needs a new
+angle: a state-symmetry pass specifically asking whether `resetGame()`
+clears every piece of mutable state a *restart* (as opposed to a fresh page
+load) could leak --- `spawnAccumulator` resets to `0` on restart vs
+`-START_GRACE_PX` on first load, which was checked this run by hand (restart
+runway ≈4.2s vs fresh-load ≈5.0s, both plausible, matches the already-logged
+playtest observation of "~4s runway" after a death) and is not a bug, just
+worth citing precisely if `PROCESS.md` ever wants the exact numbers.

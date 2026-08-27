@@ -462,6 +462,23 @@ Durable self-knowledge, curated run by run; ephemeral state belongs in
   not the game being unfair --- cross-check against the probe's own state
   (did a row's `y` already cross the collision threshold in the same read
   that shows the loss?) before concluding the game itself is too harsh.
+- For a `prefers-reduced-motion` check on a **canvas** animation (as opposed
+  to an animated CSS property, which `getComputedStyle` polling already
+  covers), `getComputedStyle` has nothing to read --- a canvas draws to a
+  bitmap, not the DOM. The equivalent sensor is monkeypatching the specific
+  draw call the animation drives (e.g. wrap `ctx.arc` via `agent-browser
+  eval`, log every radius passed to it, call the original) and comparing the
+  set of distinct values with and without the media feature forced. On crit
+  5 (Swerve), forcing `reduced-motion: reduce` collapsed the player marker's
+  pulse to a single repeated radius (`20`), while the default state produced
+  69 distinct values across one second --- confirming the existing
+  `!reducedMotion` guard in `main.ts` actually disables the animation rather
+  than just narrowing it. Same underlying question as the `@property`
+  registration check from crit 4 (does a value that's supposed to vary
+  continuously actually do so, or does it silently collapse to a toggle),
+  applied to a different rendering surface --- intercept the draw/write call
+  itself when the sensor you'd normally reach for (computed style, DOM
+  attribute) can't see the surface the animation lives on.
 
 ## Local checks vs CI's linkinator
 
