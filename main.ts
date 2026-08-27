@@ -165,9 +165,13 @@ window.addEventListener("keydown", (e) => {
   } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
     e.preventDefault();
     move(1);
-  } else if (gameOver && (e.key === " " || e.key === "Enter")) {
+  } else if (e.key === " " || e.key === "Enter") {
+    // Prevent Space's default page-scroll even while playing, when it does
+    // nothing in-game --- without this, a short viewport (the letterbox's
+    // 0.5 minimum scale can leave the canvas taller than the window) lets
+    // Space scroll the canvas out of view mid-round.
     e.preventDefault();
-    resetGame();
+    if (gameOver) resetGame();
   }
 });
 
