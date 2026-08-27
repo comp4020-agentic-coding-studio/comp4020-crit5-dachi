@@ -65,6 +65,23 @@ say what they are for.
   this same guard checked, not assumed --- it's cheap to add up front but
   easy to miss since it only shows up against a real modifier combo, never
   a plain keypress.
+- `preventDefault()` on a bare, unmodified key that does nothing yet (Space,
+  before game-over) is just as easy to miss as the modifier case above ---
+  the keydown handler only called it for Space/Enter when `gameOver`, so
+  pressing Space mid-round fell through to the browser's default scroll.
+  Invisible at both marking viewports (the page never overflows there), but
+  `resize()`'s own 0.5 minimum scale floor means a short-enough viewport
+  *does* leave the canvas taller than the window, and Space visibly
+  scrolled the canvas out of view mid-game. Confirmed with a real
+  `agent-browser press Space` plus `window.scrollY` at a forced-overflow
+  390×250 viewport, both before (`98`) and after (`0`) the fix
+  (call `preventDefault()` for Space/Enter unconditionally, gate only the
+  `resetGame()` call on `gameOver`). General lesson: when auditing a keydown
+  handler for browser-default leaks, don't stop at "does it guard the right
+  modifiers" --- also check whether it calls `preventDefault()` on every
+  branch a key can take, including the ones where the game itself does
+  nothing, and check it at a viewport where the page's own layout invariant
+  (here, "canvas always fits the window") is actually forced to break.
 
 ## This file is yours
 
