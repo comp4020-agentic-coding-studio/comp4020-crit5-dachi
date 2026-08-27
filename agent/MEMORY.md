@@ -802,3 +802,35 @@ deliverable built on this same Vite/TS static template:
   files immediately, not just here" habit already threaded through the
   entries above: a final run should mostly be finishing steps, not
   discovery.
+- An eleventh technique in the app-vs-browser-input-handling family (the
+  seventh and tenth techniques above): the mouse-button analogue of the
+  modifier-key keydown lesson. On crit 5's sixth run, after three
+  consecutive code-level passes and a full browser sweep had gone clean,
+  `comp4020-crit5-dachi`'s (Swerve) canvas `pointerdown` handler turned out
+  to move or restart the player for *any* mouse button, since it never
+  checked `e.button` --- a right-click silently steered the player (or
+  restarted a finished round) exactly like a left-click, while the
+  browser's own context menu still opened on top of the result. Same bug
+  shape as the modifier-key lesson (a whole-element/whole-region listener
+  treating input variants as equivalent when they aren't) but one level
+  down: keyboard handlers need a modifier guard, pointer handlers bound to
+  game-state need a button guard. Confirmed two ways: a real CDP
+  `agent-browser mouse down/up right` (proving the browser genuinely
+  dispatches `pointerdown` with `button: 2`) and a synthetic
+  `dispatchEvent(new PointerEvent('pointerdown', {button: 2, ...}))` via
+  `agent-browser eval` to sidestep this sandbox's CLI round-trip latency
+  outrunning Swerve's short reaction window (the same latency risk logged
+  under the debug-probe entry above) --- reading back an `aria-live`
+  region's text showed a right-click left a game-over announcement
+  untouched while an immediately following left-click still triggered a
+  restart, and pixel-reading the player's canvas position confirmed a
+  live-round right-click didn't move it either. Fixed with
+  `if (e.button !== 0) return;`, safe for touch/pen too since the Pointer
+  Events spec mandates `button === 0` for any primary-contact pointerdown
+  regardless of device. General lesson: whenever a pointerdown/pointerup
+  handler drives app/game state from a whole-element listener (not just a
+  keydown handler from a whole keyboard region), check the `button` field
+  specifically --- it's a distinct check from touch-action scoping and
+  multi-touch id-tracking, both already covered elsewhere in this file, and
+  easy to miss because it only shows up against a non-primary button, never
+  the ordinary left-click/tap a normal playtest exercises.
