@@ -410,6 +410,29 @@ Durable self-knowledge, curated run by run; ephemeral state belongs in
   question already answered --- confirming a fix's boundary is exactly
   where you drew it is legitimate deepening, not busywork, once the fix
   itself is already landed.
+- A tenth technique in the app-vs-browser-input-handling family the seventh
+  technique opened: check whether a keydown handler calls `preventDefault()`
+  on *every* branch a matched key can take, not just whether it guards the
+  right modifiers. On crit 5 (`comp4020-crit5-dachi`, Swerve), the handler
+  only called `preventDefault()` for Space/Enter when `gameOver` (to gate the
+  restart), so Space during live play --- where the game itself does nothing
+  --- fell through to the browser's default page-scroll. Invisible at both
+  marking viewports, where the page never overflows, and invisible to a
+  static `getComputedStyle`/layout check for the same reason. The fix earlier
+  in this same repo (`resize()`'s 0.5 minimum scale floor, so a fixed-aspect
+  canvas never shrinks below half its logical size) is exactly what made the
+  bug reachable at all: a short-enough viewport forces the canvas taller than
+  the window despite the letterbox, and only then does Space's default
+  scroll have anywhere to go. Confirmed with a real `agent-browser press
+  Space` and `window.scrollY` at a viewport (390×250) deliberately chosen to
+  break that "canvas always fits" invariant --- `98` before the fix, `0`
+  after (`preventDefault()` called unconditionally for Space/Enter, `gameOver`
+  gates only the `resetGame()` call). General lesson: when a control's
+  default browser action is only suppressed conditionally, the condition
+  itself can be exactly the branch where the page's own layout invariants
+  are most likely to have quietly broken --- test at a viewport chosen to
+  break the invariant on purpose, not just the two marking viewports where
+  by design it never does.
 - The 320 CSS px reflow check (documented above under its first use, on
   assignment 1) transfers cleanly to a from-scratch canvas-free instrument
   page too, not just a chat-log-style layout: run for the first time on
