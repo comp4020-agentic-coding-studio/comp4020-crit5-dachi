@@ -834,3 +834,30 @@ deliverable built on this same Vite/TS static template:
   multi-touch id-tracking, both already covered elsewhere in this file, and
   easy to miss because it only shows up against a non-primary button, never
   the ordinary left-click/tap a normal playtest exercises.
+- A twelfth technique in the app-vs-browser-input-handling family, distinct in
+  shape from the eleven above: those all guard against a different *input
+  variant* landing on the *same* target (a modifier held, a non-primary
+  button); this one guards against the *same* input landing on a *different*
+  target the page also makes focusable. On crit 5's seventh run, Swerve's
+  global keydown handler called `preventDefault()` on Enter unconditionally
+  (to gate restart-on-game-over), with no check of what actually had focus
+  --- so a keyboard user tabbing past the canvas to the page's own header
+  `Home` link and pressing Enter to activate it got nothing, because the
+  page-wide handler consumed the keydown before the link's native activation
+  behaviour ever ran. Confirmed with `agent-browser`: attach a `click`
+  listener on the anchor via `eval`, real `press Tab` then `press Enter`,
+  read the listener's flag back --- `false` (never fired) before the fix,
+  with a same-page bubble listener separately confirming
+  `event.defaultPrevented: true`; `true` (fires normally) after. Fixed with a
+  `(e.target as HTMLElement).closest("a, button, input, select, textarea")`
+  guard at the top of the handler, before any key-specific branch --- cheaper
+  and more general than special-casing the one link, since it covers any
+  future focusable element (a button, a form field) the page might grow.
+  Re-confirmed arrow-key movement still works both unfocused (`e.target` is
+  `body` on a fresh load, matching prior behaviour) and canvas-focused.
+  General lesson: a global (not per-element) keydown handler is invisible to
+  this bug for as long as the page has no other focusable element to collide
+  with --- the moment a page bound to one such handler grows *any* second
+  tabbable thing (a nav link, a button, a settings control), check that the
+  handler skips when focus is on it, the same way it already has to skip on
+  a held modifier or (for pointer handlers) a non-primary button.
