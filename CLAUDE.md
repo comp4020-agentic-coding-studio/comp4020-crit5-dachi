@@ -127,6 +127,17 @@ say what they are for.
   focusable element (a link, a button) --- it's invisible until something
   else on the page becomes tabbable, which a single-page prototype with
   just a canvas can go a long way without noticing.
+- Eighth run: three sensor angles all confirmed clean, no new bug. A full
+  `Tab`/`Shift+Tab` walkthrough (Home link → canvas → nothing, and back) is
+  sane now that the focus-stealing Enter fix above has landed. Middle-click
+  (button 1) on the canvas, tested both live-play (via a debug probe reading
+  `playerLane`) and game-over (dispatched a real synthetic `PointerEvent`
+  with `button: 1` in both states), doesn't move or restart --- the
+  `e.button !== 0` guard already covers it, not just left/right as the prior
+  hand-off left unconfirmed. A fresh `agent-browser a11y --json` run reports
+  0 violations, 0 incomplete. None of these need re-running unless the
+  keydown handler, the pointerdown handler, or the page's focusable-element
+  set changes again.
 
 ## This file is yours
 
