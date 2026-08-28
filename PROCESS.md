@@ -1,61 +1,67 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+Swerve: a three-lane dodge. Rows of blocked lanes scroll down a fixed-resolution
+canvas; the player holds one of three lanes and swerves left or right to stay in
+the open one before each row arrives. No instructions anywhere --- the canvas
+takes focus on load, the first arrow-key press or tap teaches the controls, and
+a wrong lane ends the round with a score and a restart-on-any-input recovery.
 
 ## The moments that mattered
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+1. **The opening run was too tight for a stranger.**
+   Playing the finished build, not reading `main.ts`, was what surfaced this
+   --- the first row could reach the player only ~3s after load, before a
+   first-time player had even worked out which key does what. Added a spawn
+   grace period (`START_GRACE_PX`) that holds the first row back a beat
+   longer, satisfying the brief's "a change you made came from playing the
+   finished game" requirement directly.
+   [`48b88a8`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/48b88a8)
 
-1. **what happened** --- the problem, or the thing that went wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+2. **A global keydown handler for `a`/`d`/arrow keys hijacked real browser
+   shortcuts.** `preventDefault()` was called unconditionally on every
+   matched key, so `Ctrl+A` (select all), `Ctrl+F` (find), `Alt+ArrowLeft`
+   (back navigation) and others all got eaten along with an unwanted move.
+   Caught with a real `agent-browser press Control+a` --- a genuine
+   browser-level shortcut dispatch, not a hand-built `KeyboardEvent` --- and
+   a same-page listener reading `event.defaultPrevented` back. Fixed with a
+   one-line modifier guard at the top of the handler.
+   [`eb9883e`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/eb9883e)
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** --- the standards and checks your work has to satisfy
---- rather than in a retry: a rule added to `CLAUDE.md`, a check wired up, an
-attempt thrown away. Retrying until it passes is the routine case, and changing
-what the work runs against is the skilled one.
+3. **Space silently scrolled the page mid-round.** `preventDefault()` on
+   Space/Enter was only called when `gameOver`, so during live play (where
+   Space does nothing) the browser's default scroll went through. Invisible
+   at both marking viewports, but the canvas's own letterboxing (a 0.5
+   minimum scale floor) means a short-enough viewport leaves the canvas
+   taller than the window --- confirmed with a real `agent-browser press
+   Space` at a forced-overflow viewport and `window.scrollY` reading 98
+   before the fix, 0 after.
+   [`dc29385`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/dc29385)
 
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
+4. **A right-click steered the player exactly like a left-click.** The
+   canvas's `pointerdown` handler never checked `e.button`, so any mouse
+   button moved or restarted the game while the browser's own context menu
+   opened on top. Confirmed with a real CDP `agent-browser mouse down/up
+   right` (proving the browser genuinely dispatches `button: 2`) plus a
+   synthetic `PointerEvent` to sidestep CLI round-trip latency against the
+   game's short reaction window. Fixed with `if (e.button !== 0) return;`.
+   [`da594ad`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/da594ad)
 
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+5. **The same handler that fixed (3) broke keyboard access to the page's own
+   nav link.** The unconditional Enter `preventDefault()` also ate Enter for
+   the header's Home link once a keyboard user tabbed to it --- the handler
+   never checked what actually had focus. Confirmed with a real `Tab` then
+   `Enter`, reading a click listener's flag back (never fired before the
+   fix). Fixed with a `closest("a, button, input, select, textarea")` guard
+   on `e.target` before any key-specific branch.
+   [`6340433`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/6340433)
 
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
+Across all five, the check that mattered was a real browser dispatch
+(`agent-browser press`/`mouse`), not a hand-built DOM event --- several of
+these bugs are specifically about arbitration the OS/browser does before the
+page's own JavaScript ever runs, which a synthetic `dispatchEvent` alone
+can't exercise faithfully.
 
 ## Before you ship
 
