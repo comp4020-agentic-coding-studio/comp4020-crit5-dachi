@@ -1,74 +1,80 @@
-# Hand-off --- crit 5 (a game), eighth run, 107.5h to cutoff
+# Hand-off --- crit 5 (a game), ninth run, 96.5h to cutoff
 
 ## State
 
 `comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Pushed clean this run
---- `origin/main` at `d1a1f00`.
+--- `origin/main` at `840b110`.
 
-This was the first run on this project where the sensor pass came back fully
-clean --- three angles the seventh run's hand-off had flagged as not-yet-tried,
-all confirmed with no bug:
+The eighth run's sensor pass had come back fully clean (tab order,
+middle-click, a11y audit all confirmed with no new bug), and its hand-off
+asked the ninth run to find a genuinely new question rather than repeat the
+tab-order/button-guard family. Found one: the canvas that carries every
+keyboard move (`window`-level `keydown` → arrow keys) had no explicit `role`,
+so it resolved to the implicit HTML-AAM role `img` --- confirmed with
+`agent-browser eval "document.querySelector('canvas').getAttribute('role')"`
+reading `null`. That matters specifically because a screen reader's
+browse-mode virtual cursor (NVDA/JAWS) claims bare arrow keys for its own
+quick-navigation by default, and a non-interactive implicit role doesn't
+switch the AT into the focus/forms mode that would hand raw keystrokes
+through to the page --- unlike Aurora Keys' single-letter-hotkey collision
+(logged in `MEMORY.md`, not blocking there because buttons gave an
+independent path), Swerve has *no* alternate control, so this was a
+can-a-screen-reader-user-play-at-all question, not a redundant-path one.
 
-- A full `Tab`/`Shift+Tab` walkthrough (Home link → canvas → nothing, and
-  back) is sane now that the focus-stealing-Enter fix from the seventh run
-  has landed.
-- Middle-click (button 1) on the canvas doesn't move or restart, in both
-  live-play (checked via a temporary `window.__debug` probe reading
-  `playerLane`/`gameOver`, reverted before committing) and game-over states
-  --- the existing `e.button !== 0` guard already covers it, not just
-  left/right as previously confirmed.
-- `agent-browser a11y --json` reports 0 violations, 0 incomplete.
+Fixed with `role="application"` on the canvas (`55c1dd5`), the standard
+technique for a canvas game that needs raw keys handed straight through.
+No real NVDA/JAWS/VoiceOver is available in this sandbox, so verification
+was necessarily partial (not a full AT confirmation): `pnpm check` green
+(24 tests), a fresh `agent-browser a11y --json` still 0 violations/0
+incomplete with the role present, and a real `agent-browser press
+ArrowRight`/`ArrowLeft` sequence (reading the player's x back by
+monkey-patching `CanvasRenderingContext2D.prototype.arc` via `eval`, since
+position is a closed-over `main.ts` variable with nothing in the DOM to
+query) still moved the player between lane centres exactly as before ---
+confirming the fix is additive and doesn't touch the working keyboard path
+for sighted/mouse users. Documented in both this project's own `CLAUDE.md`
+(`840b110`) and the global `MEMORY.md` (thirteenth technique in the
+app-vs-browser-input-handling family's sibling, AT-vs-page arbitration).
 
-With sensors dry for the first time (not yet a repeated pattern --- the prior
-four runs each found a real bug), and 107.5h still on the clock (~64% of the
-168h window remaining), used the "confirms clean, plenty of time left"
-signal to do doc work rather than force a speculative code change: filled in
-`PROCESS.md`'s five real moments (the playtesting-driven grace period plus
-the four keyboard/pointer input-handling bugs from runs 4--7), each with a
-real commit citation, and recorded the three clean confirmations in this
-repo's own `CLAUDE.md`. Held off on `reflections/crit-5.md` on purpose ---
-that's explicitly a final-run artefact per doctrine, and 107.5h is closer to
-crit 4's "sensors dry once, ~72% of the week left, don't lock in the story
-yet" precedent than to a genuine end-of-week finish. `pnpm check:evidence`
-confirms this: PROCESS.md's citations resolve, it only fails on the missing
-reflection file, exactly as expected at this stage.
+Full detail lives in the project's own `CLAUDE.md`; not repeating it here.
 
-`pnpm check` green throughout (24 tests, typecheck, build). A local
-`python3 -m http.server` used for this run's browser sensor pass was killed
-before the run ended --- double-check no stray server survives into a future
-run.
+`pnpm check` green throughout. Local `python3 -m http.server` used for this
+run's browser sensor pass was killed before the run ended --- confirmed via
+`curl` returning connection-refused, not just assumed. Live GitHub Pages URL
+still 404s (repo not yet flipped public/deployed by the harness) --- expected
+per the standing note below, not something to chase.
 
 ## Next action
 
-Five real bugs now found and fixed across this project (modifier keydown
-hijack, Space-scroll during play, right-click button check, focus-stealing
-Enter, plus the playtesting-driven opening grace period), all cited in
-`PROCESS.md`. Sensor angles from the app-vs-browser-input-handling family are
-now largely exhausted for this codebase --- keydown modifiers, Space/Enter
-defaults, pointer button, focus-target collision, and now middle-click and
-tab order have all been checked at least once.
+Six real/genuine findings now landed across this project (five behavioural
+bugs from runs 2--7, plus this run's accessibility gap), all but this run's
+cited in `PROCESS.md`. Consider adding a sixth `PROCESS.md` moment for the
+`role="application"` fix if a future run judges it belongs alongside the
+other five --- it's a different kind of finding (an accessibility gap found
+by reasoning about ARIA semantics, not by playing or by a browser-dispatch
+test) and the brief's "one change that came from playing the finished game"
+slot is already filled by the opening-grace-period fix, so don't force this
+one into that specific sentence.
 
-If a future run's code-level lenses go dry again too, worth trying next
+96.5h to cutoff is still well over the 24h "finish" threshold --- keep
+building/deepening, don't move to `reflections/crit-5.md` yet. If a future
+run's code-level and browser-level lenses go dry again, worth trying next
 (none of these are confirmed bugs, just untried angles):
-- The state-symmetry angle on `resetGame()`'s `spawnAccumulator` reset (0,
-  not `-START_GRACE_PX`) --- checked by hand across several runs and judged
-  not a bug (restarting straight into normal pacing, without the fresh-load
-  grace period, reads as intentional: a player who's already died once
-  doesn't need the extra orientation beat). Worth citing precisely in
-  `PROCESS.md` with exact numbers if it's ever useful, but don't reopen it
-  as a bug hunt.
-- The "one mechanic vs two" brief provocation is still open and still
-  deliberately deferred --- don't add a second mechanic speculatively; only
-  take it up if a pod-style human signal asks for more depth, since "feel"
-  isn't something these sensors can judge (same reasoning as Aurora Keys'
-  crit 4, logged in global `MEMORY.md`).
-- The brief's no-tutorial claim and "obvious in ten seconds" bar are also
-  human-judgement items the pod crit settles, not something to keep
-  re-verifying with automation.
+- Whether the `<p id="live">` `aria-live="polite"` region interacts sensibly
+  with the new `role="application"` --- application mode can suppress some
+  ATs' automatic reading of live regions outside the application's own
+  focus; not yet reasoned through carefully, and no way to confirm without a
+  real AT in this sandbox. Worth a documented "reasoned about it, here's the
+  tradeoff" pass rather than assuming it away, if this project's other
+  angles go dry again.
+- The `resetGame()` `spawnAccumulator` state-symmetry question (see prior
+  hand-offs) is closed, don't reopen.
+- The "one mechanic vs two" and no-tutorial/five-minute bars remain
+  deliberately deferred human-judgement items for the pod crit, not
+  something to keep re-verifying with automation.
 
-Given sensors are increasingly dry and time remaining is still substantial,
-the next run should first look for a genuinely new question (not a repeat of
-tab-order/button-guard-shaped checks) before defaulting to another doc pass
---- but if nothing new turns up on a good-faith attempt, that's fine to note
-and move toward `reflections/crit-5.md` once the clock is closer to the
-final run than it is now.
+Given sensors keep finding something every couple of runs when a genuinely
+new question is asked (this run being proof), don't default to a doc-only
+pass next time without first trying one more distinct angle --- but if a
+good-faith attempt turns up nothing, that's a fine result to note and keep
+moving toward the reflection once the clock is closer to the final run.

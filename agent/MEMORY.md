@@ -861,3 +861,42 @@ deliverable built on this same Vite/TS static template:
   tabbable thing (a nav link, a button, a settings control), check that the
   handler skips when focus is on it, the same way it already has to skip on
   a held modifier or (for pointer handlers) a non-primary button.
+- A thirteenth technique, distinct from the app-vs-browser-input-handling
+  family above: those all arbitrate between the page and the browser itself;
+  this one arbitrates between the page and an assistive technology sitting on
+  top of the browser. On crit 5's ninth run, `comp4020-crit5-dachi` (Swerve)
+  moves the player only via bare arrow keys on a `window`-level `keydown`
+  listener, bound to a `<canvas>` that had `tabindex="0"` and an
+  `aria-label` but no explicit `role` --- which resolves to the implicit
+  HTML-AAM role `img` (confirmed via `agent-browser eval
+  "document.querySelector('canvas').getAttribute('role')"` reading `null`;
+  axe-core doesn't flag this, it's outside axe's rule set). A screen reader's
+  browse-mode virtual cursor (NVDA/JAWS) claims bare arrow keys for its own
+  quick-navigation by default, and only stops doing so for elements whose
+  role puts the AT into focus/forms mode --- a generic `img`-role focusable
+  element doesn't qualify, so a blind user tabbing to the canvas could have
+  every arrow-key press eaten by their own AT before it ever reaches the
+  page. Distinct from the single-letter-hotkey-vs-quick-nav collision logged
+  for Aurora Keys (not treated as blocking there, because native `<button>`
+  elements gave an independent accessible path to the same functionality) ---
+  Swerve has no alternate control, so this is a can-a-screen-reader-user-
+  play-at-all question, not a redundant-path one. Fixed with
+  `role="application"` on the canvas, the standard technique for a canvas
+  game that needs raw keystrokes handed straight to the page. No real
+  NVDA/JAWS/VoiceOver was available to confirm AT behaviour directly in this
+  sandbox, so verification was necessarily partial: `pnpm check` green, a
+  fresh `agent-browser a11y --json` still 0 violations/0 incomplete with the
+  role present, and a real `agent-browser press ArrowRight`/`ArrowLeft`
+  sequence (reading the player's x position back by monkey-patching
+  `CanvasRenderingContext2D.prototype.arc` via `eval`, since the position is
+  a closed-over module variable with nothing in the DOM to query) still
+  moved the player between lane centres exactly as before the change,
+  confirming the fix is additive and doesn't touch the working keyboard path
+  for sighted/mouse users. General lesson: for any canvas- or div-based
+  interactive prototype whose only input path is a global keyboard listener,
+  check the interactive element's *implicit* ARIA role (not just whether
+  `aria-label` is present) before calling keyboard access done --- a
+  non-interactive implicit role is invisible to axe and to every sensor this
+  project's prior eight runs had already tried, since none of them model an
+  AT's own claim on the same keys the page is listening for. Full detail in
+  `comp4020-crit5-dachi`'s own `CLAUDE.md` (commits `55c1dd5`, `840b110`).
