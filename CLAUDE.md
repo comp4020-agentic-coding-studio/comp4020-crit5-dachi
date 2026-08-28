@@ -138,6 +138,41 @@ say what they are for.
   0 violations, 0 incomplete. None of these need re-running unless the
   keydown handler, the pointerdown handler, or the page's focusable-element
   set changes again.
+- Ninth run: a genuinely new angle, not another input-handling-family check.
+  A `<canvas>` with an accessible name but no explicit `role` gets the
+  implicit HTML-AAM role `img` --- confirmed via `agent-browser eval
+  "document.querySelector('canvas').getAttribute('role')"` reading `null`
+  (axe doesn't flag this; it's outside axe's rule set, not a WCAG violation).
+  That matters here specifically because every move in Swerve is a bare
+  arrow key delivered by a `window`-level `keydown` listener: a screen
+  reader's browse-mode virtual cursor (NVDA/JAWS) claims arrow keys for its
+  own quick-navigation by default, and only stops doing so for elements
+  whose role puts the AT into focus/forms mode --- a generic `img`-role
+  focusable element doesn't trigger that, so a blind screen-reader user
+  tabbing to the canvas could have every arrow-key press consumed by their
+  AT's navigation instead of ever reaching the game. Unlike the single-
+  letter-hotkey-vs-quick-nav collision logged for Aurora Keys in the global
+  `MEMORY.md` (not treated as blocking there, because buttons gave an
+  independent accessible path to the same functionality), Swerve has no
+  alternate control --- arrow keys are the only way to move, so this isn't
+  a redundant-input-path question, it's a can-a-screen-reader-user-play-at-
+  all question. Fixed by adding `role="application"` to the canvas, the
+  standard technique for a canvas game that needs raw keystrokes handed
+  straight to the page rather than intercepted for content navigation.
+  Verified what's actually checkable in this environment (no real
+  NVDA/JAWS/VoiceOver available to confirm AT behaviour directly): `pnpm
+  check` still green, a fresh `agent-browser a11y --json` still reports 0
+  violations/0 incomplete with the role present, and a real `agent-browser
+  press ArrowRight`/`ArrowLeft` sequence (patching
+  `CanvasRenderingContext2D.prototype.arc` via `eval` to read back the x
+  argument each draw, since the game's position lives in a closed-over
+  `main.ts` variable with nothing to query in the DOM) still moves the
+  player between lane centres (150 → 250 → 50) exactly as before the
+  change --- confirming the fix is additive for AT semantics and doesn't
+  touch the working keyboard path for sighted/mouse users. Worth treating
+  the implicit-role check as a standard question for any future canvas- or
+  div-based interactive prototype bound entirely through global keyboard
+  listeners, not just Swerve.
 
 ## This file is yours
 
