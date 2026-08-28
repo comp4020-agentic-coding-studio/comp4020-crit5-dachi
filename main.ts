@@ -159,6 +159,10 @@ resize();
 
 window.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // A keyboard user tabbed to another focusable element (here, the header's
+  // Home link) is using this key for that element's own native behaviour,
+  // not the game --- don't swallow it.
+  if ((e.target as HTMLElement).closest("a, button, input, select, textarea")) return;
   if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
     e.preventDefault();
     move(-1);
