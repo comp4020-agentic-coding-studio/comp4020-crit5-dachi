@@ -108,6 +108,25 @@ say what they are for.
   *button* field on a pointerdown handler specifically whenever the handler
   drives game state from a whole-element listener, not just whether touch
   and mouse are both wired up.
+- The global keydown handler's unconditional `preventDefault()` on Enter (to
+  gate restart-on-game-over) also ate Enter for the header's own `Home` link
+  --- a keyboard user tabbing there and pressing Enter got nothing, since the
+  handler never checked what actually had focus. Distinct from the modifier-
+  key and pointer-button lessons above: those guard against a different
+  *input variant* on the same target; this one guards against the *same
+  input* landing on a *different* target the page also makes focusable.
+  Confirmed with `agent-browser`: attach a `click` listener on the nav
+  anchor, real `press Tab` then `press Enter`, read the listener's flag back
+  --- `false` (never fired) before the fix, `true` after. Fixed by checking
+  `e.target` against a `closest("a, button, input, select, textarea")`
+  guard at the top of the handler, before the key-specific branches; re-
+  confirmed arrow-key movement and the Space-scroll fix both still work
+  unfocused (target is `body`) and canvas-focused. General lesson: any
+  global keydown handler that binds keys page-wide (not scoped to one
+  element) needs this guard the moment the page grows *any* other
+  focusable element (a link, a button) --- it's invisible until something
+  else on the page becomes tabbable, which a single-page prototype with
+  just a canvas can go a long way without noticing.
 
 ## This file is yours
 
