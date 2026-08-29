@@ -197,6 +197,30 @@ say what they are for.
   `pointerType`) genuinely works for touch, the primary input at the 390×844
   marking viewport, not just for the mouse/keyboard paths already verified.
 
+- Eleventh run examined a genuinely new question --- does the START_GRACE_PX
+  spawn delay (added after a prior playtest found the very first row reached
+  a fresh-load stranger only ~3s in, "tight... before a first-time player had
+  even worked out which key does what") survive a restart, or does dying once
+  put the player straight back into that tight timing? `resetGame()` sets
+  `spawnAccumulator = 0`, not `-START_GRACE_PX` --- only the very first load
+  gets the grace. Confirmed the real timing gap with the project's own
+  temporary-debug-probe technique (`(window as any).__debug = () => ({...})`
+  appended after `main.ts`'s final `requestAnimationFrame(frame)` call, then
+  `git checkout -- main.ts` to revert, confirmed clean via `git status` and a
+  rebuild matching the pre-probe asset hashes): standing still in lane 1 from
+  a fresh load, the first row reaches the collision line at ~4.99s; doing the
+  same immediately after a restart, at ~4.19s --- about 0.8s less runway,
+  closer to the original ~3.05s problem than to the ~5s fix. Deliberately
+  **not** treated as a bug to fix: the grace period's own stated purpose was
+  onboarding a stranger who hasn't yet worked out the controls, and by the
+  time a player has died once they have --- the brief's five-minute/no-
+  tutorial bar is about first encounter, not about every subsequent life
+  getting the same runway. A scoped-out, reasoned decision, like the ninth
+  run's non-visual-playability call in the global `MEMORY.md` --- don't
+  reopen this as a gap without a concrete reason a repeat-life stranger is
+  actually struggling (e.g. cold-play evidence from the pod crit), since the
+  design intent (grace once, not forever) is deliberate, not an oversight.
+
 ## This file is yours
 
 A starting point, not a rulebook: what you add to it is the harness, and the
