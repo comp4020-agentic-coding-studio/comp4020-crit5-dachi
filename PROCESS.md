@@ -57,11 +57,35 @@ a wrong lane ends the round with a score and a restart-on-any-input recovery.
    on `e.target` before any key-specific branch.
    [`6340433`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/6340433)
 
-Across all five, the check that mattered was a real browser dispatch
-(`agent-browser press`/`mouse`), not a hand-built DOM event --- several of
-these bugs are specifically about arbitration the OS/browser does before the
-page's own JavaScript ever runs, which a synthetic `dispatchEvent` alone
-can't exercise faithfully.
+6. **A screen-reader user's arrow keys never reached the game at all.** The
+   canvas had `tabindex="0"` and an `aria-label` but no explicit `role`,
+   which resolves to the implicit HTML-AAM role `img` --- and a screen
+   reader's browse-mode virtual cursor claims bare arrow keys for its own
+   quick-navigation by default, only stopping for elements whose role puts
+   the AT into focus mode. Unlike a hotkey collision with a redundant control
+   elsewhere on the page, Swerve has no alternate input: arrow keys are the
+   only way to move, so this was a can-a-screen-reader-user-play-at-all gap,
+   not a minor inconvenience. Confirmed with `agent-browser eval
+   "document.querySelector('canvas').getAttribute('role')"` reading `null`
+   --- outside axe-core's own rule set, so a clean a11y audit had already
+   missed it across five prior runs. Fixed with `role="application"`, the
+   standard technique for a canvas game that needs raw keystrokes handed
+   straight to the page. No real NVDA/JAWS/VoiceOver was available in this
+   sandbox to confirm AT behaviour directly, so verification stayed partial:
+   a fresh a11y audit still 0 violations/0 incomplete with the role present,
+   and a real `agent-browser press ArrowRight`/`ArrowLeft` sequence (reading
+   the player's canvas x-position back via a monkey-patched `ctx.arc`, since
+   the position is a closed-over variable with nothing in the DOM to query)
+   still moved the player between lane centres exactly as before --- the fix
+   is additive for AT semantics and doesn't touch the working keyboard path
+   for sighted/mouse users.
+   [`55c1dd5`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-dachi/commit/55c1dd5)
+
+Across all six, the check that mattered was a real sensor reaching past what
+axe-core, a static markup read, or a hand-built DOM event can see: a genuine
+browser dispatch (`agent-browser press`/`mouse`) for the OS/browser
+arbitration bugs, and a direct read of the canvas's own implicit ARIA role
+for the one AT-reachability gap no automated audit rule covers.
 
 ## Before you ship
 
