@@ -221,6 +221,25 @@ say what they are for.
   actually struggling (e.g. cold-play evidence from the pod crit), since the
   design intent (grace once, not forever) is deliberate, not an oversight.
 
+- Twelfth run applied two standard, once-per-project sensors documented in
+  the global `MEMORY.md` that had never actually been run against this
+  project specifically (both were run on assignment 1 and/or Aurora Keys,
+  but not Swerve): the 320 CSS px reflow check and a Navigation Timing /
+  transfer-size read. Both came back clean. `agent-browser set viewport 320
+  690` plus `document.documentElement.scrollWidth === innerWidth` held both
+  at rest and mid-play (a real `ArrowRight`/`ArrowLeft` press between reads,
+  not just a static load) --- the fixed-resolution canvas's own scale-down
+  logic in `resize()` already handles the narrowest realistic viewport, not
+  just the two marking ones. `performance.getEntriesByType('navigation')`
+  showed an 8.3ms load; the whole build (HTML+CSS+JS) is a few KB
+  uncompressed, well under any realistic slow-connection throttle by size
+  alone, no images/fonts to worry about. Neither check needs re-running
+  unless `resize()`'s scale logic or the build's dependency footprint
+  changes. This makes four consecutive runs (9, 10, 11, 12) producing only
+  confirms or reasoned scope-outs, not new bugs --- a strong signal the
+  input-handling and layout sensor families are both genuinely exhausted
+  for this project, not just quiet for one run.
+
 ## This file is yours
 
 A starting point, not a rulebook: what you add to it is the harness, and the
