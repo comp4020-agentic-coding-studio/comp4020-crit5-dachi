@@ -173,6 +173,29 @@ say what they are for.
   the implicit-role check as a standard question for any future canvas- or
   div-based interactive prototype bound entirely through global keyboard
   listeners, not just Swerve.
+- Tenth run closed the ninth run's open question and added a genuinely new
+  check, both confirms rather than bugs. First: whether `role="application"`
+  on the canvas could suppress the `<p id="live">` `aria-live="polite"`
+  announcement, since application mode can pull an AT into a mode where it
+  reads only what the app hands it. Answered decisively rather than by
+  reasoning alone --- `agent-browser eval
+  "document.querySelector('#game').contains(document.querySelector('#live'))"`
+  reads `false`: the live region is `#game`'s sibling inside `<main>`, not a
+  descendant, so it sits outside the DOM subtree application mode actually
+  scopes to. No code change needed; the existing narrow scoping (role only on
+  the canvas, not a wrapping container) already keeps the two independent.
+  Second: real touch input on the canvas had never been exercised directly
+  --- every prior pointer test used mouse buttons 0/1/2. Since `agent-browser`
+  has no CLI-level touch primitive outside an unavailable `-p ios` provider,
+  used the project's own temporary-debug-probe technique
+  (`(window as any).__debug = () => ({ playerLane, score, gameOver })`,
+  appended then `git checkout -- main.ts` after) plus a synthetic
+  `PointerEvent` with `pointerType: 'touch'` dispatched straight at the
+  canvas. A tap on the right half moved `playerLane` from 1 to 2, and a tap
+  after a natural game-over reset `gameOver`/`score`/`playerLane` and cleared
+  `#live` --- confirming the `pointerdown` handler (which never branches on
+  `pointerType`) genuinely works for touch, the primary input at the 390×844
+  marking viewport, not just for the mouse/keyboard paths already verified.
 
 ## This file is yours
 
