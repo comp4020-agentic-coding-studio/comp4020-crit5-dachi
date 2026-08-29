@@ -1,71 +1,64 @@
-# Hand-off --- crit 5 (a game), tenth run, 89.5h to cutoff
+# Hand-off --- crit 5 (a game), eleventh run, 83.5h to cutoff
 
 ## State
 
 `comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Pushed clean this run
---- `origin/main` at `b109a3b`.
+--- `origin/main` at `2d0e056`.
 
-Took the ninth run's one explicitly open question (does `role="application"`
-on the canvas risk suppressing the `#live` `aria-live="polite"` announcement)
-and answered it decisively rather than leaving it as reasoning: `#game.contains(#live)`
-reads `false` --- the live region is a sibling inside `<main>`, not a
-descendant, so it's outside the DOM subtree application mode scopes to. No
-code change needed; the existing narrow role scoping already keeps them
-independent.
+Ten prior runs had exhausted the input-handling-family sensor angles
+(modifier keys, pointer buttons, focus-stealing, AT role, live-region scope,
+touch), with the last two runs producing confirms rather than new bugs. This
+run followed the prior hand-off's explicit suggestion: with sensors dry a
+third time in a row, treat that as the signal to (1) finally cite the
+`role="application"` accessibility fix (run 9, commit `55c1dd5`) as
+`PROCESS.md`'s sixth moment --- flagged as pending since run 9 but never
+actually added --- and (2) look for one more genuinely fresh angle before
+concluding there's nothing left.
 
-Also ran a genuinely new check that had never been done on this project:
-real touch input on the canvas. Every prior pointer test used mouse buttons
-0/1/2 only. `agent-browser` has no CLI touch primitive outside an unavailable
-`-p ios` provider, so used the project's own temporary-debug-probe technique
-(`(window as any).__debug = () => ({ playerLane, score, gameOver })`,
-appended then reverted with `git checkout -- main.ts`) plus a synthetic
-`PointerEvent` with `pointerType: 'touch'` dispatched at the canvas. A tap on
-the right half moved `playerLane` 1→2; a tap after a natural game-over reset
-state and cleared `#live`. Confirms the `pointerdown` handler (no
-`pointerType` branching) genuinely works for touch, the primary input at the
-390×844 marking viewport. Both findings documented in the project's own
-`CLAUDE.md` (`b109a3b`); no `PROCESS.md` entry since nothing changed in
-`main.ts` this run --- both checks confirmed existing behaviour, not bugs.
+The fresh angle: does `START_GRACE_PX` (the spawn-delay fix that gave a
+fresh-load stranger a beat longer before the first row arrives) survive a
+restart? Used the project's own temporary-debug-probe technique
+(`(window as any).__debug = () => ({...})` appended after `main.ts`'s final
+`requestAnimationFrame(frame)` call, reverted with `git checkout -- main.ts`,
+confirmed clean via `git status` and a rebuild matching the pre-probe asset
+hashes `index-DcnawqDT.css`/`index-DgXvcWY1.js`) to time, standing still in
+lane 1, how long the first row takes to reach the collision line from a
+fresh load (~4.99s) versus immediately after a restart (~4.19s, since
+`resetGame()` zeroes `spawnAccumulator` instead of restoring the grace
+offset). Real gap, but deliberately **not** fixed: the grace period's stated
+purpose is onboarding a stranger who hasn't yet worked out the controls, and
+a player who has already died once has. Documented as a reasoned, scoped-out
+decision in the project's own `CLAUDE.md` (`2d0e056`), the same shape as run
+9/10's non-visual-playability call.
 
 `pnpm check` green throughout (24 tests). Local `python3 -m http.server` used
-for this run's sensor pass was killed before the run ended --- confirmed via
-`curl` returning `000`, not just assumed. `dist/` rebuilt clean afterward and
-matches the same asset hashes as before the temporary debug probe was added
-and reverted (`index-DcnawqDT.css`, `index-DgXvcWY1.js`), confirming the
-revert left no residue. Live GitHub Pages URL still 404s (repo not yet
-flipped public/deployed by the harness) --- expected, not something to chase.
+for this run's probe was confirmed killed (`curl` returning `000`) before the
+run ended, and `dist/` rebuilt clean matching prior asset hashes. Live GitHub
+Pages URL still 404s (repo not yet flipped public/deployed by the harness)
+--- expected, not something to chase.
 
 ## Next action
 
-Seven real/genuine findings now landed across this project (five behavioural
-bugs from runs 2--7, the ninth run's `role="application"` accessibility gap,
-and this run's two confirms don't add a new bug but do close out the
-remaining open questions from run 9's hand-off). `PROCESS.md`'s five cited
-moments are still the right set --- these two confirms are hygiene, not new
-"moments that mattered."
+`PROCESS.md` now has six cited moments (five behavioural bugs, one
+accessibility fix), matching every real code change made across eleven runs.
+The input-handling sensor family is genuinely exhausted --- three consecutive
+runs (9, 10, 11) have only produced confirms or reasoned non-fixes, not new
+bugs. Two items remain deliberately out of scope, already reasoned through
+and not to be reopened without new evidence:
 
-89.5h to cutoff is still well over the 24h "finish" threshold --- keep
-building/deepening, don't move to `reflections/crit-5.md` yet. Sensors have
-gone dry on the input-handling-family questions (modifier keys, pointer
-buttons, focus-stealing, AT role, live-region scope, touch) after ten runs of
-increasingly narrow angles; the remaining items flagged in past hand-offs are
-deliberately out of scope for automation, not untried:
-- The "one mechanic vs two" and no-tutorial/five-minute bars remain
-  deferred human-judgement items for the pod crit.
-- Full non-visual playability (a screen-reader user has no way to know which
-  lane is blocked in an upcoming row --- that information is 100% visual,
-  canvas-only, with no audio/haptic equivalent) was considered this run and
-  deliberately not treated as a gap to close: the core mechanic is inherently
-  visual (dodge on-screen obstacles), same as the reference example (Mario
-  World 1-1) isn't non-visually playable either. The `role="application"` fix
-  from run 9 was about reachability (can arrow keys get to the game at all,
-  which is fixable), not about the game's fundamentally visual information
-  channel (which isn't, without a much larger audio-cue feature this brief
-  doesn't call for). Don't reopen this as a "gap" --- it's a scoped-out,
-  reasoned decision, not an unexamined one.
+- The "one mechanic vs two" and no-tutorial/five-minute bars remain deferred
+  human-judgement items for the pod crit.
+- Full non-visual playability (a screen-reader user can't know which lane is
+  blocked in an upcoming row --- 100% visual, canvas-only) is scoped out:
+  the core mechanic is inherently visual, same as the brief's own reference
+  example (Mario World 1-1).
+- The restart-grace-period gap (this run) is scoped out: onboarding-only
+  grace is the intended design, not an oversight.
 
-If a future run's sensors go dry again on a fresh angle, that's a legitimate
-signal to start drafting `PROCESS.md`'s possible sixth moment (the
-`role="application"` fix, still not yet added --- see run 9's note) and,
-once the clock is closer to the final run, `reflections/crit-5.md`. Don't
-force a re-run of any of the ten runs' already-answered questions first.
+83.5h to cutoff is still well over the 24h "finish" threshold --- don't move
+to `reflections/crit-5.md` yet. If a twelfth run's sensors go dry on yet
+another fresh angle (a fourth consecutive dry run), that's a strong signal
+this project is functionally done and the remaining runway should go toward
+watching for anything the pod crit itself surfaces, rather than inventing a
+seventh narrow input-handling question. Don't force a re-run of any of the
+eleven runs' already-answered questions first.

@@ -900,3 +900,22 @@ deliverable built on this same Vite/TS static template:
   project's prior eight runs had already tried, since none of them model an
   AT's own claim on the same keys the page is listening for. Full detail in
   `comp4020-crit5-dachi`'s own `CLAUDE.md` (commits `55c1dd5`, `840b110`).
+- A variant of the "does a reset control clear everything, not just what it
+  redraws" lens (assignment 1's Reset-button entry above), applied to timing
+  constants rather than DOM state: when a playtesting fix's own rationale
+  names a *specific* state-entry path (here, Swerve's `START_GRACE_PX` spawn
+  delay, added because a *fresh-load* stranger hadn't yet learned the
+  controls), check whether every other path that reaches the same starting
+  state --- a restart, a reset, a retry --- actually replays that same fix,
+  or only the one path the original playtest happened to exercise. On crit
+  5's eleventh run, `resetGame()` zeroed `spawnAccumulator` instead of
+  restoring the grace offset, so a restart got ~0.8s less runway before the
+  first row than a fresh load did. Confirmed by timing (via the project's
+  own temporary-debug-probe technique) how long a stationary player has
+  before the first row reaches the collision line from each entry path
+  (~4.99s fresh load vs ~4.19s restart). Not every such gap is a bug to
+  close, though: here it was examined and left alone, since the fix's
+  purpose (onboard a stranger who doesn't know the controls yet) doesn't
+  apply once the player has already died once and learned them --- the
+  general lesson is to *ask* the question explicitly for any fix scoped to
+  one entry path, not to assume symmetry closes automatically.
