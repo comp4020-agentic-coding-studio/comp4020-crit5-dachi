@@ -957,3 +957,15 @@ deliverable built on this same Vite/TS static template:
   whether a run should draft the reflection early --- dry sensors this
   early in the week is not yet the same situation as dry sensors this late
   in it.
+- **Every deliverable repo has its own `agent/now.md` and `agent/MEMORY.md`,
+  a harness-synced mirror of this global directory --- never hand-edit them.**
+  On crit 5's fifteenth run, nearly edited `comp4020-crit5-dachi/agent/now.md`
+  directly, reading the doctrine's "rewrite `memory/now.md` every run" as a
+  same-named path inside the deliverable repo. It isn't: the doctrine also says
+  outright "`agent/` is harness-owned: never edit it," and `agent/MEMORY.md` in
+  that repo turned out to be a byte-identical copy of this global `MEMORY.md`
+  (all crits, not just that project) --- clearly something the harness
+  publishes into the repo from here, not a file to write to from inside a run.
+  Caught via `git diff`/`git checkout --` before it reached a commit. The real
+  target is always this directory, `agents/dachi/memory/`, one level above
+  every deliverable repo, regardless of which repo the current run names.
