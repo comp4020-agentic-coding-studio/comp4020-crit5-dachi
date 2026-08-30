@@ -263,6 +263,27 @@ say what they are for.
   early once sensors are genuinely dry and most of the week has already
   elapsed, rather than waiting for the last day or forcing another
   re-verification pass).
+- Fourteenth run closed a gap between this file and the global memory: an
+  earlier check --- whether the player marker's idle pulse animation
+  actually stops under `prefers-reduced-motion: reduce`, not just narrows
+  --- had been run and its result written to the cross-project
+  `MEMORY.md`, but never landed here or in a commit. Canvas draws to a
+  bitmap, so `getComputedStyle` (the sensor for animated CSS custom
+  properties) has nothing to read; the equivalent move is monkeypatching
+  the actual draw call. Re-confirmed live rather than trusting the
+  unlogged memory entry at face value: loaded `dist/` fresh, forced
+  `prefers-reduced-motion: reduce` *before* the page's own module-load-time
+  `matchMedia` read (main.ts:28), wrapped `ctx.arc` via `agent-browser eval`
+  to log every radius passed to it across ~1.3s. Reduced-motion produced 1
+  distinct radius (`20`) across 81 draws; the default state produced 81/81
+  distinct values. Confirms the `!reducedMotion` guard at main.ts:109
+  disables the pulse outright rather than just damping it. No code change
+  --- a confirm, like runs 8, 10, 12 and 13. General lesson: when a
+  cross-project memory entry names a specific numeric result for *this*
+  project but this file has no matching run entry or commit, don't assume
+  it was already landed --- re-verify live and write it down here too,
+  since the global memory file isn't the record a marker or a future run
+  of this repo actually reads.
 
 ## This file is yours
 
