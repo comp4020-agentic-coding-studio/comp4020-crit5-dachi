@@ -1,59 +1,52 @@
-# Hand-off --- crit 5 (a game), thirteenth run, 65.5h to cutoff
+# Hand-off --- crit 5 (a game), fourteenth run, 59.5h to cutoff
 
 ## State
 
 `comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Pushed clean this run
---- `origin/main` at `b85321b` (once pushed; see below).
+--- local `main` at `5054861` (not yet pushed; see below).
 
-This run's own check: whether a backgrounded tab's rAF throttling (a real
-gap between frames after alt-tab away/back) could cause an unfair jump ---
-a stale `dt` producing either an instant collision or a burst of rows
-spawning at once. Answered by arithmetic, not a live browser check:
-`frame()`'s `dt` is clamped to `Math.min(0.05, ...)` regardless of real
-elapsed time, and even at the game's own speed cap (450 world units/s), one
-clamped frame only advances the spawn accumulator by 22.5 units against a
-170-unit row spacing --- neither a runaway jump nor a skipped-row burst is
-reachable. No source change; documented in the project's own `CLAUDE.md`
-(`b85321b`).
+This run found and closed a documentation gap rather than a new bug: the
+global `MEMORY.md` already contained a specific, numbered finding for this
+project (forcing `prefers-reduced-motion: reduce` collapses the player
+marker's idle pulse from 81 distinct radii to 1 repeated value, confirming
+the `!reducedMotion` guard in `main.ts` disables the animation rather than
+just narrowing it) that had never landed in this repo's own `CLAUDE.md` or
+in any commit. Re-verified live rather than trusting the unlogged memory
+entry at face value --- built `dist/`, served it, forced the media feature
+*before* the page's module-load-time `matchMedia` read, monkeypatched
+`ctx.arc` via `agent-browser eval` to log every radius drawn: 1/81 distinct
+under reduced-motion, 81/81 distinct under the default. Matches the memory
+entry exactly. Documented in `CLAUDE.md` (`5054861`) as the project's
+fourteenth run entry, with the general lesson that a cross-project memory
+finding naming this project by name still needs its own commit/local-doc
+record --- the global file isn't the record a marker or a future run of
+this specific repo reads. No source change (a confirm, like runs 8, 10, 12,
+13). `pnpm check` (24 tests) and `pnpm check:evidence` both green.
 
-This makes five consecutive dry runs (9--13): four browser-level sensor
-passes plus this run's arithmetic one, all confirms or reasoned scope-outs,
-no new bugs. At 65.5h to cutoff (~61% of the 168h window already elapsed
---- well past crit 4's 28%-elapsed point, which is the precedent for *not*
-drafting early), this run drafted `reflections/crit-5.md` (273 words,
-answering both standing prompts: the `role="application"` a11y catch as
-the breakthrough, and the "ask a narrower question, don't just re-run
-sensors" lesson for the developer-identity prompt) rather than inventing a
-sixth pass. `pnpm check:evidence` passes with the reflection present and
-all 6 `PROCESS.md` citations still resolving. `pnpm check` green (24
-tests, unchanged). Verified the built `dist/` still serves and loads
-clean via a real `agent-browser open`/`eval` round-trip (canvas `role`
-still `application`), server confirmed killed after. Working tree clean.
+Live GitHub Pages URL (`https://comp4020-agentic-coding-studio.github.io/comp4020-crit5-dachi/`)
+still 404s --- checked again this run, unchanged from the thirteenth run's
+note. Not something to chase; the harness flips repos public and deploys on
+its own schedule, not something I hold credentials for.
 
 ## Next action
 
-**This repo is now functionally finished pre-crit.** PROCESS.md (6 cited
-bug-fix moments) and reflections/crit-5.md are both written; nothing new
-has surfaced in five straight runs across every sensor family this
-project has invented (input-handling/OS-arbitration, layout/reflow,
-performance/transfer-size, and now frame-timing arithmetic). Three items
-remain deliberately scoped out and shouldn't be reopened without new
-evidence (see the project's own `CLAUDE.md`, "Swerve-specific notes"):
-the one-mechanic/no-tutorial bars (human-judgement, for the pod crit),
-non-visual playability (inherently visual mechanic, same as the brief's
-own Mario 1-1 reference), and the restart-grace-period gap (onboarding-
-only grace is the intended design).
+**Still functionally finished pre-crit**, now with one fewer
+memory/project-file inconsistency than the last hand-off. `PROCESS.md` (6
+cited bug-fix moments) and `reflections/crit-5.md` are both written and
+still pass `check:evidence`. Six consecutive runs now (9--14) have produced
+only confirms or documentation fixes, no new bugs, across every sensor
+family this project has invented (input-handling/OS-arbitration,
+layout/reflow, performance/transfer-size, frame-timing arithmetic, and now
+reduced-motion-on-canvas).
 
-With 65.5h still on the clock, the honest next step is *not* a fourteenth
-self-generated sensor pass --- if a future run can't name a genuinely new
-question before starting, don't force one. Live GitHub Pages URL still
-404s (repo not yet flipped public by the harness); check it once it's up,
-but that's the harness's job, not something to chase. The one thing left
-to actually wait for is the pod crit itself: watch for whatever it
-surfaces (the no-tutorial rule is explicitly "the one thing here you can't
-put under test and can't fake"), and treat that as the next real signal
-rather than another invented check. If a run lands with nothing from the
-crit yet and no new angle, a light final verification pass (full page/link
-walkthrough, confirm the live URL, `git status` clean) is enough --- this
-repo doesn't need more building, only finishing when the prompt calls a
-run the last one.
+Before inventing a seventh pass, first check whether the same
+memory-vs-project-file gap exists anywhere else --- grep the global
+`MEMORY.md` for `comp4020-crit5-dachi`/`Swerve` and diff its claims against
+this repo's own `CLAUDE.md` run-by-run before assuming everything else is
+already landed locally, the way this run's opening assumption ("thirteenth
+run is the latest state") turned out to be one run behind reality. If that
+comes back clean too, don't force a new sensor pass without a genuinely new
+question in hand --- the honest move at that point is a light final
+verification (full page/link walkthrough, confirm the live URL, `git status`
+clean) rather than manufacturing an eighth invented check. Push this run's
+commit; nothing else is blocking a push.
