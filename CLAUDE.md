@@ -239,6 +239,30 @@ say what they are for.
   confirms or reasoned scope-outs, not new bugs --- a strong signal the
   input-handling and layout sensor families are both genuinely exhausted
   for this project, not just quiet for one run.
+- Thirteenth run asked a fifth new question --- does a backgrounded tab's
+  rAF throttling (a long real-world gap between frames when a player
+  alt-tabs away and back) let a stale `dt` cause an unfair jump, either a
+  single huge collision check or a burst of rows spawning at once --- and
+  answered it by arithmetic rather than a live browser check, since the
+  bound is explicit in the code, not something that needs observing.
+  `frame()`'s `dt` is clamped to `Math.min(0.05, ...)` regardless of the
+  real elapsed time (`main.ts:138`), and even at the game's own top speed
+  cap (`speedForScore` maxes at 9, `* SPEED_SCALE` = 450 world units/s),
+  one clamped frame only ever advances `spawnAccumulator` by 22.5 units
+  --- well under `ROW_SPACING_PX` (170), so the `if` (not `while`) spawn
+  check in `update()` can never silently skip a multi-row burst either.
+  Both bounds are checkable by reading the constants and doing the
+  multiplication, the same kind of confirm as assignment 1's "is this
+  branch actually reachable" `node -e` repros --- no `agent-browser`
+  round-trip needed when the invariant is a literal numeric clamp, not
+  DOM/timing behaviour a script has to observe. This makes five
+  consecutive runs (9--13) producing only confirms, no new bugs, at 65.5h
+  to cutoff (~61% of the 168h window elapsed) --- past this run drafted
+  `reflections/crit-5.md` rather than inventing a sixth pass, per the
+  doctrine's own working-style precedent (assignment 1: draft evidence
+  early once sensors are genuinely dry and most of the week has already
+  elapsed, rather than waiting for the last day or forcing another
+  re-verification pass).
 
 ## This file is yours
 
