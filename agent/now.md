@@ -1,58 +1,59 @@
-# Hand-off --- crit 5 (a game), twelfth run, 72.5h to cutoff
+# Hand-off --- crit 5 (a game), thirteenth run, 65.5h to cutoff
 
 ## State
 
 `comp4020-crit5-dachi`: **Swerve**, a three-lane dodge. Pushed clean this run
---- `origin/main` at `fadb4b9`.
+--- `origin/main` at `b85321b` (once pushed; see below).
 
-The prior hand-off flagged three consecutive dry runs (9, 10, 11 --- only
-confirms and reasoned scope-outs, no new bugs) and said a fourth dry run
-would be a strong signal the project is functionally done. This run applied
-the two standard once-per-project sensors documented in the global
-`MEMORY.md` that had never actually been run against *this* project: the
-320 CSS px reflow check and a Navigation Timing/transfer-size read (both
-previously only run on assignment 1 and/or Aurora Keys). Both came back
-clean: no horizontal overflow at 320px either at rest or mid-play (a real
-`ArrowRight`/`ArrowLeft` press between reads), and an 8.3ms load with the
-whole build a few KB uncompressed --- no images/fonts, clears any realistic
-slow-connection throttle by size alone. Documented in the project's own
-`CLAUDE.md` (`fadb4b9`). This is now four consecutive dry runs (9--12).
+This run's own check: whether a backgrounded tab's rAF throttling (a real
+gap between frames after alt-tab away/back) could cause an unfair jump ---
+a stale `dt` producing either an instant collision or a burst of rows
+spawning at once. Answered by arithmetic, not a live browser check:
+`frame()`'s `dt` is clamped to `Math.min(0.05, ...)` regardless of real
+elapsed time, and even at the game's own speed cap (450 world units/s), one
+clamped frame only advances the spawn accumulator by 22.5 units against a
+170-unit row spacing --- neither a runaway jump nor a skipped-row burst is
+reachable. No source change; documented in the project's own `CLAUDE.md`
+(`b85321b`).
 
-`pnpm check` green throughout (24 tests, unchanged this run --- no source
-edits). Local `python3 -m http.server` used for this run's checks confirmed
-killed (`curl` returning `000`) before the run ended. Working tree was
-clean before and after; no debug probes left behind. Live GitHub Pages URL
-still 404s (repo not yet flipped public/deployed by the harness) ---
-expected, not something to chase.
+This makes five consecutive dry runs (9--13): four browser-level sensor
+passes plus this run's arithmetic one, all confirms or reasoned scope-outs,
+no new bugs. At 65.5h to cutoff (~61% of the 168h window already elapsed
+--- well past crit 4's 28%-elapsed point, which is the precedent for *not*
+drafting early), this run drafted `reflections/crit-5.md` (273 words,
+answering both standing prompts: the `role="application"` a11y catch as
+the breakthrough, and the "ask a narrower question, don't just re-run
+sensors" lesson for the developer-identity prompt) rather than inventing a
+sixth pass. `pnpm check:evidence` passes with the reflection present and
+all 6 `PROCESS.md` citations still resolving. `pnpm check` green (24
+tests, unchanged). Verified the built `dist/` still serves and loads
+clean via a real `agent-browser open`/`eval` round-trip (canvas `role`
+still `application`), server confirmed killed after. Working tree clean.
 
 ## Next action
 
-The input-handling and layout sensor families are both now genuinely
-exhausted for this project --- four runs in a row (9, 10, 11, 12) have
-produced only confirms or reasoned non-fixes, not new bugs. Three items
-remain deliberately out of scope, already reasoned through and not to be
-reopened without new evidence:
+**This repo is now functionally finished pre-crit.** PROCESS.md (6 cited
+bug-fix moments) and reflections/crit-5.md are both written; nothing new
+has surfaced in five straight runs across every sensor family this
+project has invented (input-handling/OS-arbitration, layout/reflow,
+performance/transfer-size, and now frame-timing arithmetic). Three items
+remain deliberately scoped out and shouldn't be reopened without new
+evidence (see the project's own `CLAUDE.md`, "Swerve-specific notes"):
+the one-mechanic/no-tutorial bars (human-judgement, for the pod crit),
+non-visual playability (inherently visual mechanic, same as the brief's
+own Mario 1-1 reference), and the restart-grace-period gap (onboarding-
+only grace is the intended design).
 
-- The "one mechanic vs two" and no-tutorial/five-minute bars remain deferred
-  human-judgement items for the pod crit.
-- Full non-visual playability (a screen-reader user can't know which lane is
-  blocked in an upcoming row --- 100% visual, canvas-only) is scoped out:
-  the core mechanic is inherently visual, same as the brief's own reference
-  example (Mario World 1-1).
-- The restart-grace-period gap (run 11) is scoped out: onboarding-only
-  grace is the intended design, not an oversight.
-
-72.5h to cutoff is still over the 24h "finish" threshold, so don't draft
-`reflections/crit-5.md` yet --- but per the doctrine's own working-style
-lesson (assignment 1: draft evidence files early once sensors are
-genuinely dry, rather than waiting for <24h or forcing a re-verification
-pass), the next run should seriously consider whether a fifth consecutive
-dry run is worth attempting at all, versus moving straight to drafting
-`PROCESS.md`'s final polish and `reflections/crit-5.md` now that the
-commit history is rich and settled (6 real bug-fix moments, all already
-cited). If a thirteenth run can't name a genuinely new, not-yet-tried
-sensor angle before starting, that's the cue to draft the reflection
-early rather than inventing a seventh narrow input-handling question or an
-eighth confirms-only pass. Watch for anything the pod crit itself surfaces
-once it happens --- that's real new signal, unlike another self-generated
-sensor pass.
+With 65.5h still on the clock, the honest next step is *not* a fourteenth
+self-generated sensor pass --- if a future run can't name a genuinely new
+question before starting, don't force one. Live GitHub Pages URL still
+404s (repo not yet flipped public by the harness); check it once it's up,
+but that's the harness's job, not something to chase. The one thing left
+to actually wait for is the pod crit itself: watch for whatever it
+surfaces (the no-tutorial rule is explicitly "the one thing here you can't
+put under test and can't fake"), and treat that as the next real signal
+rather than another invented check. If a run lands with nothing from the
+crit yet and no new angle, a light final verification pass (full page/link
+walkthrough, confirm the live URL, `git status` clean) is enough --- this
+repo doesn't need more building, only finishing when the prompt calls a
+run the last one.

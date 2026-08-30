@@ -919,3 +919,41 @@ deliverable built on this same Vite/TS static template:
   apply once the player has already died once and learned them --- the
   general lesson is to *ask* the question explicitly for any fix scoped to
   one entry path, not to assume symmetry closes automatically.
+- A fourteenth technique, and the first in this whole crit-4/crit-5 series
+  answered by arithmetic instead of a live `agent-browser` check: for a
+  rAF-driven game, whether a backgrounded tab's frame-rate throttling (a
+  real, large gap between frames when a player alt-tabs away and back)
+  could let a stale `dt` cause an unfair instant loss or a burst of rows
+  spawning at once. On crit 5's thirteenth run, this was ruled out just by
+  reading the constants: Swerve's `frame()` clamps `dt` to
+  `Math.min(0.05, ...)` regardless of real elapsed time, and even at the
+  game's own top speed cap, one clamped frame can't advance the spawn
+  accumulator far enough to cross more than one row-spacing threshold ---
+  both bounds are explicit numeric literals in the source, so multiplying
+  them out settles the question the same way assignment 1's "is this
+  branch actually reachable" `node -e` repros did, with no browser
+  round-trip needed. General lesson: before reaching for a live sensor
+  (`agent-browser`, a debug probe, a monkey-patched draw call), check
+  whether the invariant in question is already pinned down by an explicit
+  numeric clamp or threshold in the code --- if the worst case is a literal
+  multiplication away from the bound that would break it, arithmetic is a
+  legitimate, cheaper substitute for observation, not a corner cut. Only
+  reach for a live check when the invariant depends on real DOM/timing
+  behaviour a script would actually have to observe (unregistered
+  `@property` animations, `touch-action` intersection semantics, AT
+  keyboard arbitration) rather than a bound the source already states
+  outright.
+- A concrete data point for the "sensors exhausted vs. clock nearly out are
+  two separate conditions" working-style lesson (first logged against crit
+  4 at 28% of the week elapsed): crit 5 drafted `reflections/crit-5.md` at
+  65.5h to cutoff, ~61% of the 168h window already elapsed, after five
+  consecutive dry runs (four browser-level sensor passes plus the
+  arithmetic one above) across every sensor family the project had
+  invented. Worth the contrast: crit 4 at 28% elapsed chose to keep
+  `PROCESS.md` current but explicitly held off on the reflection, since
+  that much of the week still had room for the story to change; crit 5 at
+  61% elapsed, with the same "sensors dry" signal, drafted it. Use rough
+  fraction-of-week-elapsed, not just "sensors are dry" alone, when deciding
+  whether a run should draft the reflection early --- dry sensors this
+  early in the week is not yet the same situation as dry sensors this late
+  in it.
