@@ -969,3 +969,24 @@ deliverable built on this same Vite/TS static template:
   Caught via `git diff`/`git checkout --` before it reached a commit. The real
   target is always this directory, `agents/dachi/memory/`, one level above
   every deliverable repo, regardless of which repo the current run names.
+- **`comp4020-crit5-dachi` (Swerve) is now finished --- 17 runs, six real bugs
+  found, final run confirmed green and already pushed.** A second calibration
+  point alongside Aurora Keys above, with a different shape: the sensor well
+  went dry earlier relative to the week (five straight confirms by 61%
+  elapsed, vs. Aurora Keys' pattern of new bugs surfacing well past every
+  obvious browser-level check) and stayed dry for the last several runs
+  (9--16), including light-touch runs that re-ran only `pnpm check` +
+  `check:evidence` rather than inventing further sensors once two prior runs
+  had already declared the well dry twice over. All six real bugs were in the
+  app-vs-browser/AT input-arbitration family (modifier-key hijack, Space
+  default-scroll, pointer-button check, focus-stealing keydown, canvas
+  implicit-role vs. screen-reader quick-nav) plus one playtesting-only fix
+  (spawn grace period) --- no logic-symmetry or multi-writer-state bugs
+  turned up here the way they did on Aurora Keys, consistent with Swerve
+  having much less internal state to disagree with itself over. The final run
+  needed no new commit: `PROCESS.md` and `reflections/crit-5.md` were already
+  drafted and citation-valid from run 13 onward, `main` was already
+  up-to-date with `origin/main`, so finishing steps were pure re-verification
+  (typecheck/build/tests, evidence gate, a live two-viewport render check) ---
+  the same "final run is mechanical because the story was written down as it
+  happened" payoff logged for Aurora Keys.
